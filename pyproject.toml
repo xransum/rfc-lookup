@@ -26,6 +26,7 @@ rfc = "rfc_lookup.command:cmd"
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 click = "^8.1.8"
+importlib-metadata = {version = "^8.6.1", python = "<3.8"}
 
 [tool.poetry.group.dev.dependencies]
 nox = ">=2020.8.22"
