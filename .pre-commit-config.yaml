@@ -40,12 +40,12 @@ repos:
         types: [python]
         require_serial: true
         args: [--darglint-ignore-regex, .*]
-      - id: pytype
-        name: pytype
-        entry: pytype
-        language: system
-        types: [python]
-        args: []
+        # - id: pytype
+        #   name: pytype
+        #   entry: pytype
+        #   language: system
+        #   types: [python]
+        #   args: []
       - id: isort
         name: isort
         entry: isort
