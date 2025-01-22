@@ -163,7 +163,7 @@ def mypy(session: Session) -> None:
     session.install(".", "mypy", "pytest", "importlib-metadata")
     session.run("mypy", *args)
 
-    if not session.posargs and session.python == python_version:
+    if not session.posargs and session.python == PYTHON_VERSION_MAIN:
         session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
 
 
