@@ -4,7 +4,7 @@ RFC Lookup
 .. toctree::
    :hidden:
    :maxdepth: 1
-   
+
    reference
    contributing
    code_of_conduct

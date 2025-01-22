@@ -39,5 +39,3 @@ def download_rfc_latest() -> Optional[str]:
     if content is not None:
         return content.decode("utf-8")
     return None
-
-

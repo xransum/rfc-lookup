@@ -9,4 +9,3 @@ per-file-ignores =
     src/**/*.py:RST213,RST210,
 rst-roles = class,const,func,meth,mod,ref
 rst-directives = deprecated
-

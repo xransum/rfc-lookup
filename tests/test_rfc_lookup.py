@@ -2,6 +2,7 @@
 
 import pytest
 
+
 def test_import():
     try:
         import rfc_lookup
