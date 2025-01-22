@@ -3,8 +3,9 @@
 import pytest
 
 
-def test_import():
+def test_import() -> None:
+    """Test package import."""
     try:
-        import rfc_lookup
+        import rfc_lookup  # noqa: F401
     except ImportError:
         pytest.fail("Package import failed")

@@ -2,7 +2,8 @@
 
 import sys
 import urllib.error
-from typing import Any, Dict, Optional
+from typing import Optional
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from rfc_lookup.constants import RFC_INDEX_URL
@@ -15,8 +16,13 @@ def is_virt_env() -> bool:
 
 def download_file(url: str) -> Optional[bytes]:
     """Download and return the content of a file from a URL."""
+    parsed_url = urlparse(url)
+    if parsed_url.scheme not in {"http", "https"}:
+        print(f"Blocked unsafe URL scheme: {parsed_url.scheme}")
+        return None
+
     try:
-        with urlopen(url, timeout=10) as response:
+        with urlopen(url, timeout=10) as response:  # noqa: S310
             # Read the response as bytes
             content: bytes = response.read()
             return content
