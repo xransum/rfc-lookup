@@ -32,7 +32,7 @@ pip install rfc-lookup
 RFC Lookup's usage looks like:
 
 ```bash
-rfc-lookup [OPTIONS]
+rfc [OPTIONS]
 ```
 
 For usage instructions, please refer to the [Usage][usage] documentation.
