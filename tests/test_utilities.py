@@ -1,11 +1,12 @@
 """Tests for utilities module."""
+
 from rfc_lookup.utilities import (
     clean_chars,
     extract_authors,
-    get_request,
-    search_rfc_editor,
     get_latest_report_ids,
+    get_request,
     get_rfc_report,
+    search_rfc_editor,
 )
 
 
@@ -21,5 +22,8 @@ def test_clean_chars_invalid() -> None:
 
 def test_extract_authors() -> None:
     """Test the author extraction from string."""
-    assert extract_authors("C. Krasic, M. Bishop, A. Frindell, Ed.") == ['C. Krasic', 'M. Bishop', 'A. Frindell, Ed.']
-
+    assert extract_authors("C. Krasic, M. Bishop, A. Frindell, Ed.") == [
+        "C. Krasic",
+        "M. Bishop",
+        "A. Frindell, Ed.",
+    ]

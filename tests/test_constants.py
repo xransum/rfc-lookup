@@ -1,15 +1,16 @@
 """Tests for constants module."""
+
 import re
-from rfc_lookup.constants import (
-    USER_AGENT,
-    DEFAULT_HEADERS,
-    ALLOWED_SCHEMES,
-)
+
+from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS, USER_AGENT
 
 
 def test_user_agent() -> None:
     """Test for calid format of user agent."""
-    assert re.findall(r"[a-zA-Z]{3,}\/\d*\.?\d* \((.|[\s])+\)", USER_AGENT) is not None
+    assert (
+        re.findall(r"[a-zA-Z]{3,}\/\d*\.?\d* \((.|[\s])+\)", USER_AGENT)
+        is not None
+    )
 
 
 def test_default_headers() -> None:

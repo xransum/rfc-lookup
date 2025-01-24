@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+
 project = "rfc-lookup"
 author = "Kevin Haas"
 copyright = f"{datetime.now().year}, {author}"
