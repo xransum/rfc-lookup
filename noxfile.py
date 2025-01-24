@@ -183,7 +183,7 @@ def pytype(session: Session) -> None:
         *((python, None) for python in PYTHON_VERSIONS),
     ],
 )
-def tests(session: Session) -> None:
+def tests(session: Session, poetry: str) -> None:
     """Run the test suite."""
     session.install(".")
     session.install(
