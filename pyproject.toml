@@ -27,6 +27,7 @@ rfc = "rfc_lookup.command:main"
 python = ">=3.8,<4.0"
 click = "^8.1.8"
 importlib-metadata = { version = "^8.6.1", python = "<3.8" }
+beautifulsoup4 = "^4.12.3"
 
 [tool.poetry.group.dev.dependencies]
 nox = ">=2020.8.22"
@@ -62,6 +63,29 @@ reorder-python-imports = "^3.12.0"
 typing-extensions = ">=4.0.1"
 types-beautifulsoup4 = "^4.12.0"
 nox-poetry = "^1.1.0"
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["rfc_lookup"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:future.*",      # imp: in favour of importlib
+]
+
+[tool.black]
+line-length = 80
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
