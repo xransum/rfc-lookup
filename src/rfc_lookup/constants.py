@@ -1,5 +1,9 @@
 """Constants for the rfc_lookup package."""
 
-RFC_ARCHIVE_URL = "https://www.rfc-editor.org/in-notes/tar/RFC-all.tar.gz"
-RFC_INDEX_URL = "https://www.ietf.org/download/rfc-index.txt"
-RFC_LATEST_URL = "https://www.ietf.org/rfc/rfc-index-latest.txt"
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+)
+DEFAULT_HEADERS = {
+    "User-Agent": USER_AGENT,
+}
