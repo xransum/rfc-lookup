@@ -7,3 +7,4 @@ USER_AGENT = (
 DEFAULT_HEADERS = {
     "User-Agent": USER_AGENT,
 }
+ALLOWED_SCHEMES = {"http", "https"}

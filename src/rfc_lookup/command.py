@@ -1,8 +1,9 @@
 """Command-line interface."""
 
 import click
+
+from rfc_lookup.errors import InvalidRfcIdError
 from rfc_lookup.utilities import get_rfc_report, search_rfc_editor
-from rfc_lookup.errors import InvalidRfcId
 
 
 @click.group()
@@ -21,17 +22,18 @@ def rfc_get(id, url) -> None:
             click.echo(f"URL: https://www.rfc-editor.org/rfc/rfc{id}.html")
         else:
             click.echo(report)
-            
-    except InvalidRfcId as err:
+
+    except InvalidRfcIdError as err:
         click.echo(err, err=True)
+
 
 @click.command(name="search")
 @click.argument("value")
 def rfc_search(value):
     """Search for RFCs by title."""
     results = search_rfc_editor(value)
-    
-    click.echo(f"Search '{value}' with {len(results)} results.")
+
+    click.echo(f"Search {value!r} with {len(results)} results.")
     for result in results:
         line = f"{result['id']}: {result['title']}"
         click.echo(line)

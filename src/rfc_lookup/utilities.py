@@ -1,14 +1,14 @@
 """Module for package utility functions."""
 
 import re
-from typing import Any, Dict, List, Optional
 import urllib.parse
 import urllib.request
+from typing import Any, Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
-from rfc_lookup.constants import DEFAULT_HEADERS
-from rfc_lookup.errors import InvalidRfcId
+from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS
+from rfc_lookup.errors import InvalidRfcIdError
 
 
 def clean_chars(text: str) -> str:
@@ -17,8 +17,8 @@ def clean_chars(text: str) -> str:
 
 
 def extract_authors(line):
-    """
-    Splits a line of author data into individual authors.
+    """Splits a line of author data into individual authors.
+
     Keeps 'Ed.' attached to the corresponding name.
 
     Args:
@@ -46,14 +46,20 @@ def get_request(
     params: Optional[Dict[str, Any]] = None,
 ) -> bytes:
     """Get the content of a web page."""
-    
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in ALLOWED_SCHEMES:
+        raise ValueError(
+            f"Invalid URL scheme {parsed.scheme!r}. "
+            f"Allowed schemes are: {', '.join(ALLOWED_SCHEMES)}"
+        )
+
     full_url = url
     if params is not None:
         full_url = f"{url}?{urllib.parse.urlencode(params)}"
-        
+
     headers = DEFAULT_HEADERS
     req = urllib.request.Request(full_url, headers=headers)
-    with urllib.request.urlopen(req) as res:
+    with urllib.request.urlopen(req) as res:  # noqa: S310
         return res.read()
 
 
@@ -94,15 +100,14 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
                 "id": _id,
                 "link": report_url,
                 "files": {
-                clean_chars(a.text.strip()): a.get("href")
-                for a in cells[1].find_all("a")
+                    clean_chars(a.text.strip()): a.get("href")
+                    for a in cells[1].find_all("a")
                 },
                 "title": clean_chars(cells[2].text.strip()),
                 "authors": extract_authors(clean_chars(cells[3].text.strip())),
                 "publication_date": clean_chars(cells[4].text.strip()),
                 "more_info": clean_chars(cells[5].text.strip()),
-                "status": clean_chars(cells[6].text.strip())
-                .split(" (")[0]
+                "status": clean_chars(cells[6].text.strip()).split(" (")[0],
             }
         )
 
@@ -131,10 +136,12 @@ def get_latest_report_ids() -> List[int]:
 
 def get_rfc_report(report_id: int) -> str:
     """Get the RFC report for a given RFC ID."""
-    latest_id = latest_report_ids = get_latest_report_ids()[-1]
+    latest_id = get_latest_report_ids()[-1]
 
     if 0 >= report_id or report_id > latest_id:
-        raise InvalidRfcId(f"Invalid RFC ID {report_id}, must be between 0 and {latest_id}")
+        raise InvalidRfcIdError(
+            f"Invalid RFC ID {report_id}, must be between 0 and {latest_id}"
+        )
 
     url = f"https://www.rfc-editor.org/rfc/rfc{report_id}.txt"
     content = get_request(url).decode("utf-8")
