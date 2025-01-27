@@ -46,21 +46,28 @@ def get_request(
     params: Optional[Dict[str, Any]] = None,
 ) -> bytes:
     """Get the content of a web page."""
-    parsed = urllib.parse.urlparse(url)
+    if not url:
+        raise ValueError("URL cannot be empty.")
+
+    # Construct the full URL with query parameters
+    full_url = url
+    if params is not None:
+        full_url = f"{url}?{urllib.parse.urlencode(params)}"
+
+    # Parse the URL to validate the scheme
+    parsed = urllib.parse.urlparse(full_url)
     if parsed.scheme not in ALLOWED_SCHEMES:
         raise ValueError(
             f"Invalid URL scheme {parsed.scheme!r}. "
             f"Allowed schemes are: {', '.join(ALLOWED_SCHEMES)}"
         )
 
-    full_url = url
-    if params is not None:
-        full_url = f"{url}?{urllib.parse.urlencode(params)}"
-
+    # Create the request
     headers = DEFAULT_HEADERS
     req = urllib.request.Request(full_url, headers=headers)
-    with urllib.request.urlopen(req) as res:  # noqa: S310
-        return res.read()
+    # with urllib.request.urlopen(req) as res:
+    #     return res.read()
+    return urllib.request.urlopen(req).read()
 
 
 def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
@@ -122,7 +129,7 @@ def get_latest_report_ids() -> List[int]:
     report_ids = []
     for line in content.split("\n"):
         split = line.split(" ")
-        if len(split) < 1:
+        if len(split) < 1:  # pragma: no cover
             # Skip empty lines
             continue
 
@@ -136,7 +143,8 @@ def get_latest_report_ids() -> List[int]:
 
 def get_rfc_report(report_id: int) -> str:
     """Get the RFC report for a given RFC ID."""
-    latest_id = get_latest_report_ids()[-1]
+    latest_ids = get_latest_report_ids()
+    latest_id = latest_ids[-1]
 
     if 0 >= report_id or report_id > latest_id:
         raise InvalidRfcIdError(
