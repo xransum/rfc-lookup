@@ -7,7 +7,7 @@ from rfc_lookup.utilities import get_rfc_report, search_rfc_editor
 
 
 @click.group()
-def cmd():
+def cli():
     """Command line interface for the RFC lookup tool."""
 
 
@@ -40,13 +40,13 @@ def rfc_search(value):
 
 
 # Add subcommands to the main command
-cmd.add_command(rfc_get)
-cmd.add_command(rfc_search)
+cli.add_command(rfc_get)
+cli.add_command(rfc_search)
 
 
 def main() -> None:
     """Main entry point for the CLI."""
-    cmd()
+    cli()
 
 
 if __name__ == "__main__":
