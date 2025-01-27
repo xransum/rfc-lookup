@@ -5,10 +5,21 @@ import click
 from rfc_lookup.errors import InvalidRfcIdError
 from rfc_lookup.utilities import get_rfc_report, search_rfc_editor
 
+from rfc_lookup import __version__
 
-@click.group()
-def cli():
-    """Command line interface for the RFC lookup tool."""
+
+@click.group(
+        name="rfc",
+        invoke_without_command=True,
+        no_args_is_help=True,
+)
+@click.pass_context
+@click.option('-V', '--version', is_flag=True, help="Show the version number.")
+def cli(ctx: click.Context, version: bool) -> None:
+    """Command line interface for the RFC lookup tool.    """
+    if version is True:
+        click.echo(f"{ctx.info_name}, version {__version__}")
+        ctx.exit()
 
 
 @click.command(name="get")
