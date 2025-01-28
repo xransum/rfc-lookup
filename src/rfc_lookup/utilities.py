@@ -5,6 +5,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
+import bs4
 from bs4 import BeautifulSoup
 
 from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS
@@ -89,7 +90,8 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
     if table is None:
         return results
 
-    rows = table.find_all("tr")[1:]
+    rows: bs4.element.ResultSet = table.find_all("tr")[1:]  # type: ignore
+
     for row in rows:
         cells = row.find_all("td")
 
