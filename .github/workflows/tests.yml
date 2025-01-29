@@ -62,7 +62,7 @@ jobs:
         run: |
           pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
           nox --version
-          
+
       - name: Install Nox-Poetry
         run: |
           pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox-poetry
