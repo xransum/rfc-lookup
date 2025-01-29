@@ -5,7 +5,7 @@ from typing import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from bs4 import BeautifulSoup  # type: ignore
+from bs4 import BeautifulSoup
 
 from rfc_lookup.constants import DEFAULT_HEADERS
 from rfc_lookup.errors import InvalidRfcIdError
@@ -69,9 +69,7 @@ def test_get_request(mock_request: Mock, mock_urlopen: Mock) -> None:
     assert result == mock_result
 
 
-def test_get_request_with_params(
-    mock_request: Mock, mock_urlopen: Mock
-) -> None:
+def test_get_request_with_params(mock_request: Mock, mock_urlopen: Mock) -> None:
     """Test get_request."""
     mock_url = "http://127.0.0.1:80/"
     mock_params = {"a": "1", "b": "2"}

@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
-import bs4  # type: ignore[import-untyped]
+import bs4
 from bs4 import BeautifulSoup
 
 from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS
