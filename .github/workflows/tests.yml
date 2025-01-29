@@ -136,9 +136,9 @@ jobs:
           pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
           nox --version
 
-      - name: Install nox-poetry
+      - name: Install Nox-Poetry
         run: |
-          pip install .
+          pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox-poetry
 
       - name: Download coverage data
         uses: actions/download-artifact@v3.0.2
