@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rfc-lookup"
-version = "0.1.0"
+version = "1.0.0"
 description = "CLI tool for searching and viewing RFC details. Supports searching by query or directly retrieving information for one or more RFC numbers."
 authors = ["xransum <xransum@users.noreply.github.com>"]
 license = "MIT"
