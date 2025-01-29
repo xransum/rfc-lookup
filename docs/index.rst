@@ -34,7 +34,7 @@ RFC Lookup's usage looks like:
 
 .. code-block:: console
 
-   $ rfc-lookup [OPTIONS]
+   $ rfc [OPTIONS] COMMAND [ARGS]...
 
 .. option:: --version
 
@@ -43,3 +43,31 @@ RFC Lookup's usage looks like:
 .. option:: --help
 
    Display a short usage message and exit.
+
+
+
+Commands
+--------
+
+Get
+^^^^
+
+The ``get`` command retrieves the RFC with the given number.
+
+.. code-block:: console
+
+   $ rfc get [RFC_NUMBER] [OPTIONS]
+
+.. option:: --url
+
+   Display the URL of the RFC.
+
+
+Search
+^^^^^^
+
+The ``search`` command searches for RFCs with the given query.
+
+.. code-block:: console
+
+   $ rfc search [QUERY] [OPTIONS]
