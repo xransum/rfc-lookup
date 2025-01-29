@@ -1,10 +1,11 @@
 """Tests for utilities module."""
 
 import urllib.parse
+from typing import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup  # type: ignore
 
 from rfc_lookup.constants import DEFAULT_HEADERS
 from rfc_lookup.errors import InvalidRfcIdError
@@ -38,20 +39,20 @@ def test_extract_authors() -> None:
 
 
 @pytest.fixture
-def mock_request():
+def mock_request() -> Generator[Mock, None, None]:
     """Mock Request object."""
     with patch("rfc_lookup.utilities.urllib.request.Request") as mock:
         yield mock
 
 
 @pytest.fixture
-def mock_urlopen():
+def mock_urlopen() -> Generator[Mock, None, None]:
     """Mock urlopen context manager."""
     with patch("rfc_lookup.utilities.urllib.request.urlopen") as mock:
         yield mock
 
 
-def test_get_request(mock_request, mock_urlopen) -> None:
+def test_get_request(mock_request: Mock, mock_urlopen: Mock) -> None:
     """Test get_request."""
     mock_url = "http://127.0.0.1:80/"
     mock_result = b"Hello, World!"
@@ -68,10 +69,10 @@ def test_get_request(mock_request, mock_urlopen) -> None:
     assert result == mock_result
 
 
-def test_get_request_with_params(mock_request, mock_urlopen) -> None:
+def test_get_request_with_params(mock_request: Mock, mock_urlopen: Mock) -> None:
     """Test get_request."""
     mock_url = "http://127.0.0.1:80/"
-    mock_params = {"a": 1, "b": 2}
+    mock_params = {"a": "1", "b": "2"}
     mock_full_url = f"{mock_url}?{urllib.parse.urlencode(mock_params)}"
     mock_result = b"Hello, World!"
     # Mock urllib.request.urlopen.read
@@ -100,7 +101,7 @@ def test_get_request_invalid_scheme() -> None:
 
 
 @pytest.fixture
-def mock_get_request():
+def mock_get_request() -> Generator[Mock, None, None]:
     """Mock get_request function."""
     with patch("rfc_lookup.utilities.get_request") as mock:
         yield mock
@@ -120,7 +121,7 @@ mock_valid_rfc_search = b"""<table class=\"gridtable\">
 </table>"""
 
 
-def test_search_rfc_editor(mock_get_request) -> None:
+def test_search_rfc_editor(mock_get_request: Mock) -> None:
     """Test requests for rfc editor."""
     mock_result = [
         {
@@ -139,14 +140,14 @@ def test_search_rfc_editor(mock_get_request) -> None:
     assert result == mock_result
 
 
-def test_search_rfc_editor_empty(mock_get_request) -> None:
+def test_search_rfc_editor_empty(mock_get_request: Mock) -> None:
     """Test requests for empty rfc editor."""
     mock_get_request.return_value = b"Hello, World"
     result = search_rfc_editor("Hello, World!")
     assert result == []
 
 
-def test_search_rfc_editor_invalid_cols(mock_get_request) -> None:
+def test_search_rfc_editor_invalid_cols(mock_get_request: Mock) -> None:
     """Test requests for rfc editor with invalid cols."""
     # Mock result by nuking one of the td elements
     soup = BeautifulSoup(mock_valid_rfc_search, "html.parser")
@@ -170,7 +171,7 @@ abcd Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 """
 
 
-def test_get_latest_report_ids(mock_get_request) -> None:
+def test_get_latest_report_ids(mock_get_request: Mock) -> None:
     """Test for fetching valid request ID's."""
     mock_get_request.return_value = mock_latest_reports
     result = get_latest_report_ids()
@@ -178,13 +179,15 @@ def test_get_latest_report_ids(mock_get_request) -> None:
 
 
 @pytest.fixture()
-def mock_get_latest_report_ids():
+def mock_get_latest_report_ids() -> Generator[Mock, None, None]:
     """Mock get_latest_report_ids function."""
     with patch("rfc_lookup.utilities.get_latest_report_ids") as mock:
         yield mock
 
 
-def test_get_rfc_report(mock_get_request, mock_get_latest_report_ids) -> None:
+def test_get_rfc_report(
+    mock_get_request: Mock, mock_get_latest_report_ids: Mock
+) -> None:
     """Test fetching rfc report."""
     mock_get_latest_report_ids.return_value = [2]
     mock_get_request.return_value = b"Hello, World!"
@@ -192,7 +195,7 @@ def test_get_rfc_report(mock_get_request, mock_get_latest_report_ids) -> None:
     assert result == "Hello, World!"
 
 
-def test_get_rfc_report_exception(mock_get_latest_report_ids) -> None:
+def test_get_rfc_report_exception(mock_get_latest_report_ids: Mock) -> None:
     """Test get rfc report exception."""
     mock_get_latest_report_ids.side_effect = [[2]] * 2
 
