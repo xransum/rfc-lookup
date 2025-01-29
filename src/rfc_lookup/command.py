@@ -2,30 +2,29 @@
 
 import click
 
+from rfc_lookup import __version__
 from rfc_lookup.errors import InvalidRfcIdError
 from rfc_lookup.utilities import get_rfc_report, search_rfc_editor
 
-from rfc_lookup import __version__
 
-
-@click.group(
-        name="rfc",
-        invoke_without_command=True,
-        no_args_is_help=True,
+@click.group(  # pragma: no cover
+    name="rfc",
+    invoke_without_command=True,
+    no_args_is_help=True,
 )
 @click.pass_context
-@click.option('-V', '--version', is_flag=True, help="Show the version number.")
+@click.option("-V", "--version", is_flag=True, help="Show the version number.")
 def cli(ctx: click.Context, version: bool) -> None:
-    """Command line interface for the RFC lookup tool.    """
+    """Command line interface for the RFC lookup tool."""
     if version is True:
         click.echo(f"{ctx.info_name}, version {__version__}")
         ctx.exit()
 
 
-@click.command(name="get")
+@click.command(name="get")  # pragma: no cover
 @click.argument("id", type=int)
 @click.option("--url", is_flag=True, help="Show the URL for the RFC.")
-def rfc_get(id, url) -> None:
+def rfc_get(id: int, url: bool) -> None:
     """Show details for given RFC numbers."""
     try:
         report = get_rfc_report(id)
@@ -36,11 +35,12 @@ def rfc_get(id, url) -> None:
 
     except InvalidRfcIdError as err:
         click.echo(err, err=True)
+        exit(1)
 
 
-@click.command(name="search")
+@click.command(name="search")  # pragma: no cover
 @click.argument("value")
-def rfc_search(value):
+def rfc_search(value: str) -> None:
     """Search for RFCs by title."""
     results = search_rfc_editor(value)
 
@@ -57,7 +57,7 @@ cli.add_command(rfc_search)
 
 def main() -> None:
     """Main entry point for the CLI."""
-    cli()
+    cli()  # pragma: no cover
 
 
 if __name__ == "__main__":

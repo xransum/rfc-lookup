@@ -6,9 +6,10 @@ import shutil
 import sys
 from pathlib import Path
 from textwrap import dedent
+from typing import List
 
-import nox
-from nox_poetry import Session, session
+import nox  # type: ignore[import-not-found]
+from nox_poetry import Session, session  # type: ignore[import-not-found]
 
 
 PACKAGE = "rfc_lookup"
@@ -108,10 +109,14 @@ def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
                 break
 
 
-@session(name="pre-commit", python=PYTHON_VERSION_MAIN)
+@session(name="pre-commit", python=PYTHON_VERSION_MAIN)  # type: ignore[misc]
 def precommit(session: Session) -> None:
     """Lint using pre-commit."""
-    args = session.posargs or ["run", "--all-files", "--hook-stage=manual"]
+    args: List[str] = session.posargs or [
+        "run",
+        "--all-files",
+        "--hook-stage=manual",
+    ]
     session.install(
         "black",
         "darglint",
@@ -138,7 +143,7 @@ def precommit(session: Session) -> None:
         activate_virtualenv_in_precommit_hooks(session)
 
 
-@session(python=PYTHON_VERSION_MAIN)
+@session(python=PYTHON_VERSION_MAIN)  # type: ignore[misc]
 def safety(session: Session) -> None:
     """Scan dependencies for insecure packages."""
     requirements = session.poetry.export_requirements()
@@ -160,10 +165,10 @@ def safety(session: Session) -> None:
     session.run(*args)
 
 
-@session(python=PYTHON_VERSIONS)
+@session(python=PYTHON_VERSIONS)  # type: ignore[misc]
 def mypy(session: Session) -> None:
     """Type-check using mypy."""
-    args = session.posargs or LOCATIONS
+    args: List[str] = session.posargs or list(LOCATIONS)
 
     session.install(".", "mypy", "pytest", "importlib-metadata")
     session.run("mypy", *args)
@@ -174,22 +179,22 @@ def mypy(session: Session) -> None:
         )
 
 
-@session(python=PYTHON_VERSIONS)
+@session(python=PYTHON_VERSIONS)  # type: ignore[misc]
 def pytype(session: Session) -> None:
     """Run the static type checker."""
-    args = session.posargs or ["--disable=import-error", *LOCATIONS]
+    args: List[str] = session.posargs or ["--disable=import-error", *LOCATIONS]
     session.install("pytype")
     session.run("pytype", *args)
 
 
-@session
+@session  # type: ignore[misc]
 @nox.parametrize(
     "python,poetry",
     [
         (PYTHON_VERSIONS[0], "1.0.10"),
         *((python, None) for python in PYTHON_VERSIONS),
     ],
-)
+)  # type: ignore[misc]
 def tests(session: Session, poetry: str) -> None:
     """Run the test suite."""
     session.install(".")
@@ -211,10 +216,10 @@ def tests(session: Session, poetry: str) -> None:
             session.notify("coverage", posargs=[])
 
 
-@session(python=PYTHON_VERSIONS)
+@session(python=PYTHON_VERSIONS)  # type: ignore[misc]
 def coverage(session: Session) -> None:
     """Produce the coverage report."""
-    args = session.posargs or ["report"]
+    args: List[str] = session.posargs or ["report"]
 
     session.install("coverage[toml]")
 
@@ -224,7 +229,7 @@ def coverage(session: Session) -> None:
     session.run("coverage", *args)
 
 
-@session(python=PYTHON_VERSIONS)
+@session(python=PYTHON_VERSIONS)  # type: ignore[misc]
 def typeguard(session: Session) -> None:
     """Runtime type checking using Typeguard."""
     session.install(".")
@@ -232,11 +237,11 @@ def typeguard(session: Session) -> None:
     session.run("pytest", f"--typeguard-packages={PACKAGE}", *session.posargs)
 
 
-@session(python=PYTHON_VERSIONS)
+@session(python=PYTHON_VERSIONS)  # type: ignore[misc]
 def xdoctest(session: Session) -> None:
     """Run examples with xdoctest."""
     if session.posargs:
-        args = [PACKAGE, *session.posargs]
+        args: List[str] = [PACKAGE, *session.posargs]
     else:
         args = [f"--modname={PACKAGE}", "--command=all"]
         if "FORCE_COLOR" in os.environ:
@@ -247,10 +252,10 @@ def xdoctest(session: Session) -> None:
     session.run("python", "-m", "xdoctest", *args)
 
 
-@session(name="docs-build", python=PYTHON_VERSION_MAIN)
+@session(name="docs-build", python=PYTHON_VERSION_MAIN)  # type: ignore[misc]
 def docs_build(session: Session) -> None:
     """Build the documentation."""
-    args = session.posargs or ["docs", "docs/_build"]
+    args: List[str] = session.posargs or ["docs", "docs/_build"]
     if not session.posargs and "FORCE_COLOR" in os.environ:
         args.insert(0, "--color")
 
@@ -264,10 +269,14 @@ def docs_build(session: Session) -> None:
     session.run("sphinx-build", *args)
 
 
-@session(python=PYTHON_VERSION_MAIN)
+@session(python=PYTHON_VERSION_MAIN)  # type: ignore[misc]
 def docs(session: Session) -> None:
     """Build and serve the documentation with live reloading on file changes."""
-    args = session.posargs or ["--open-browser", "docs", "docs/_build"]
+    args: List[str] = session.posargs or [
+        "--open-browser",
+        "docs",
+        "docs/_build",
+    ]
     session.install(".")
     session.install("sphinx", "sphinx-autobuild", "furo", "myst-parser")
 

@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional
 
-import bs4
+import bs4  # type: ignore[import-untyped]
 from bs4 import BeautifulSoup
 
 from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS
@@ -17,7 +17,7 @@ def clean_chars(text: str) -> str:
     return text.replace("\xa0", " ")
 
 
-def extract_authors(line):
+def extract_authors(line: str) -> List[str]:
     """Splits a line of author data into individual authors.
 
     Keeps 'Ed.' attached to the corresponding name.
@@ -30,7 +30,7 @@ def extract_authors(line):
     """
     # Split by commas
     parts = [part.strip() for part in line.split(",")]
-    authors = []
+    authors: List[str] = []
 
     # Combine "Ed." with the preceding name
     for i, part in enumerate(parts):
@@ -44,8 +44,8 @@ def extract_authors(line):
 
 def get_request(
     url: str,
-    params: Optional[Dict[str, Any]] = None,
-) -> bytes:
+    params: Optional[Dict[str, str]] = None,
+) -> Any:
     """Get the content of a web page."""
     if not url:
         raise ValueError("URL cannot be empty.")
@@ -85,12 +85,12 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
     html = get_request(url, params).decode("utf-8")
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", class_="gridtable")
-    results = []
+    results: List[Dict[str, Any]] = []
 
     if table is None:
         return results
 
-    rows: bs4.element.ResultSet = table.find_all("tr")[1:]  # type: ignore
+    rows: bs4.element.ResultSet = table.find_all("tr")[1:]
 
     for row in rows:
         cells = row.find_all("td")
@@ -154,5 +154,6 @@ def get_rfc_report(report_id: int) -> str:
         )
 
     url = f"https://www.rfc-editor.org/rfc/rfc{report_id}.txt"
-    content = get_request(url).decode("utf-8")
+    res: bytes = get_request(url)
+    content: str = res.decode("utf-8")
     return content
