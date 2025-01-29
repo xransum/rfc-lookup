@@ -6,7 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 from textwrap import dedent
-from typing import Callable, List, TypeVar
+from typing import List
 
 import nox
 from nox_poetry import Session, session
