@@ -69,7 +69,9 @@ def test_get_request(mock_request: Mock, mock_urlopen: Mock) -> None:
     assert result == mock_result
 
 
-def test_get_request_with_params(mock_request: Mock, mock_urlopen: Mock) -> None:
+def test_get_request_with_params(
+    mock_request: Mock, mock_urlopen: Mock
+) -> None:
     """Test get_request."""
     mock_url = "http://127.0.0.1:80/"
     mock_params = {"a": "1", "b": "2"}
