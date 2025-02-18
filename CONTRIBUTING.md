@@ -1,8 +1,9 @@
 # Contributing
 
 Thank you for your interest in improving this project. This project is
-open-source under the **MIT** [license](https://github.com/xransum/rfc-lookup/blob/main/LICENSE) and welcomes contributions in the form
-of bug reports, feature requests, and pull requests.
+open-source under the **MIT**
+[license](https://github.com/xransum/rfc-lookup/blob/main/LICENSE) and welcomes
+contributions in the form of bug reports, feature requests, and pull requests.
 
 Here is a list of important resources for contributors:
 
@@ -12,7 +13,8 @@ Here is a list of important resources for contributors:
 
 ## How to Report a Bug
 
-Report bugs on the [Issue Tracker](https://github.com/xransum/rfc-lookup/issues).
+Report bugs on the
+[Issue Tracker](https://github.com/xransum/rfc-lookup/issues).
 
 When filing an issue, make sure to answer these questions:
 
@@ -27,7 +29,8 @@ reproduce the issue.
 
 ## How to Request a Feature
 
-Request features on the [file an issue](https://github.com/xransum/rfc-lookup/issues).
+Request features on the
+[file an issue](https://github.com/xransum/rfc-lookup/issues).
 
 ## How to Contribute Code
 
@@ -41,4 +44,6 @@ Request features on the [file an issue](https://github.com/xransum/rfc-lookup/is
 
 ## Code of Conduct
 
-This project is governed by a [Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [me@kevin-haas.com](mailto:me@kevin-haas.com).
+This project is governed by a [Code of Conduct](./CODE_OF_CONDUCT.md). By
+participating, you are expected to uphold this code. Please report unacceptable
+behavior to [me@kevin-haas.com](mailto:me@kevin-haas.com).

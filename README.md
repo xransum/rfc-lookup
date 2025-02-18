@@ -3,7 +3,10 @@
 # RFC Lookup
 
 This project is a simple command-line interface that allows for easily looking
-up and searching for RFCs from the command line. It uses the resources provided by [IETF](https://www.ietf.org/) and the [RFC Editor](https://www.rfc-editor.org/) to provide the most up-to-date information on RFCs.
+up and searching for RFCs from the command line. It uses the resources provided
+by [IETF](https://www.ietf.org/) and the
+[RFC Editor](https://www.rfc-editor.org/) to provide the most up-to-date
+information on RFCs.
 
 <br />
 
@@ -39,16 +42,18 @@ For usage instructions, please refer to the [Usage][usage] documentation.
 
 ## Reference
 
-For a complete list of available functions and classes, please refer to the [Reference][reference] documentation.
+For a complete list of available functions and classes, please refer to the
+[Reference][reference] documentation.
 
 ## Contributing
 
-Contributions are very welcome. To learn more, see the [Contributor Guide][contributing].
+Contributions are very welcome. To learn more, see the [Contributor
+Guide][contributing].
 
 ## License
 
-Distributed under the terms of the [MIT license][license], _rfc-lookup_ is
-free and open source software.
+Distributed under the terms of the [MIT license][license], _rfc-lookup_ is free
+and open source software.
 
 ## Issues
 
