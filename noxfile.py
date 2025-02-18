@@ -211,7 +211,13 @@ def tests(session: Session, poetry: str) -> None:
 
     try:
         session.run(
-            "coverage", "run", "--parallel", "-m", "pytest", *session.posargs
+            "coverage",
+            "run",
+            "--parallel",
+            f"--data-file=.coverage.{session.python}",
+            "-m",
+            "pytest",
+            *session.posargs,
         )
     finally:
         if session.interactive:
