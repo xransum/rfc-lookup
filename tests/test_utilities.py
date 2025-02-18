@@ -154,8 +154,8 @@ def test_search_rfc_editor_invalid_cols(mock_get_request: Mock) -> None:
     # Mock result by nuking one of the td elements
     soup = BeautifulSoup(mock_valid_rfc_search, "html.parser")
     tr = soup.find_all("tr")[-1]
-    td = tr.find("td")
-    td.replaceWith("")
+    td = tr.find("td")  # type: ignore
+    td.replace_with("")  # type: ignore
 
     mock_get_request.return_value = str(soup).encode("utf-8")
     result = search_rfc_editor("Hello, World!")
