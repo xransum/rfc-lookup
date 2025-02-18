@@ -108,7 +108,6 @@ jobs:
         with:
           name: coverage-data
           path: .coverage.*
-          path: .coverage.*
 
       - name: Upload documentation
         if: matrix.session == 'docs-build'
