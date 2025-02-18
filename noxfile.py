@@ -189,15 +189,17 @@ def pytype(session: Session) -> None:
     session.run("pytype", *args)
 
 
-@session
-@nox.parametrize(
-    "python,poetry",
-    [
-        (PYTHON_VERSIONS[0], "1.0.10"),
-        *((python, None) for python in PYTHON_VERSIONS),
-    ],
-)
-def tests(session: Session, poetry: str) -> None:
+# @session
+# @nox.parametrize(
+#     "python,poetry",
+#     [
+#         (PYTHON_VERSIONS[0], "1.0.10"),
+#         *((python, None) for python in PYTHON_VERSIONS),
+#     ],
+# )
+# def tests(session: Session, poetry: str) -> None:
+@session(python=PYTHON_VERSIONS)
+def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
     session.install(
