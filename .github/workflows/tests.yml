@@ -1,3 +1,4 @@
+# .github/workflows/tests.yml
 name: Tests
 
 on:
@@ -102,7 +103,7 @@ jobs:
         if: always() && matrix.session == 'tests'
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.python }}
           path: .coverage.*
           include-hidden-files: true
 
