@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 from typing import List
+from uuid import uuid4
 
 import nox
 from nox_poetry import Session, session
@@ -211,12 +212,14 @@ def tests(session: Session) -> None:
         "typing_extensions",
     )
 
+    coverage_file = f".coverage.{session.python}.{uuid4().hex}"
+
     try:
         session.run(
             "coverage",
             "run",
             "--parallel",
-            f"--data-file=.coverage.{session.python}",
+            f"--data-file={coverage_file}",
             "-m",
             "pytest",
             *session.posargs,
