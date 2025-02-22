@@ -151,6 +151,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-data
+          pattern: coverage-*
 
       - name: Combine coverage data and display human readable report
         run: |
