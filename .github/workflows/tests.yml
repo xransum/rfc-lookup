@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3.5.3
+        with:
+          clean: true
 
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v4.6.1
@@ -88,7 +90,8 @@ jobs:
         if: matrix.session == 'pre-commit'
         with:
           path: ~/.cache/pre-commit
-          key: ${{ steps.pre-commit-cache.outputs.result }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ steps.pre-commit-cache.outputs.result }}-${{
+            hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
             ${{ steps.pre-commit-cache.outputs.result }}-
 
@@ -98,14 +101,15 @@ jobs:
 
       - name: Upload coverage data
         if: always() && matrix.session == 'tests'
-        uses: "actions/upload-artifact@v3.1.2"
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
-          path: ".coverage.*"
+          name: coverage-data-${{ runner.os }}-${{ matrix.python }}
+          path: .coverage.*
+          include-hidden-files: true
 
       - name: Upload documentation
         if: matrix.session == 'docs-build'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: docs
           path: docs/_build
@@ -115,10 +119,12 @@ jobs:
     needs: tests
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4
+        with:
+          clean: true
 
       - name: Set up Python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -142,9 +148,23 @@ jobs:
           pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox-poetry
 
       - name: Download coverage data
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          # Use pattern since articaft name is dynamic
+          pattern: coverage-data-*
+          path: .coverage.*
+          merge-multiple: true
+
+      # With the new changes with upload-artifact, the .coverage.* files are now
+      # uploaded as a zip by their running os and Python version. Since the
+      # download-artifact action extracts them, they are now in a folder with the
+      # same name as the zip file. We need to move them to the root directory
+      # for Nox to be able to find them.
+      - name: Extract coverage data
+        run: |
+          ls -la ${{ github.workspace }}/.coverage.*
+          mv -v ${{ github.workspace }}/.coverage.*/.coverage.* ${{ github.workspace }}/
+          rm -vrf ${{ github.workspace }}/.coverage.*/
 
       - name: Combine coverage data and display human readable report
         run: |

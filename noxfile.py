@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 from typing import List
+from uuid import uuid4
 
 import nox
 from nox_poetry import Session, session
@@ -189,15 +190,17 @@ def pytype(session: Session) -> None:
     session.run("pytype", *args)
 
 
-@session
-@nox.parametrize(
-    "python,poetry",
-    [
-        (PYTHON_VERSIONS[0], "1.0.10"),
-        *((python, None) for python in PYTHON_VERSIONS),
-    ],
-)
-def tests(session: Session, poetry: str) -> None:
+# @session
+# @nox.parametrize(
+#     "python,poetry",
+#     [
+#         (PYTHON_VERSIONS[0], "1.0.10"),
+#         *((python, None) for python in PYTHON_VERSIONS),
+#     ],
+# )
+# def tests(session: Session, poetry: str) -> None:
+@session(python=PYTHON_VERSIONS)
+def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
     session.install(
@@ -209,9 +212,17 @@ def tests(session: Session, poetry: str) -> None:
         "typing_extensions",
     )
 
+    coverage_file = f".coverage.{session.python}.{uuid4().hex}"
+
     try:
         session.run(
-            "coverage", "run", "--parallel", "-m", "pytest", *session.posargs
+            "coverage",
+            "run",
+            "--parallel",
+            f"--data-file={coverage_file}",
+            "-m",
+            "pytest",
+            *session.posargs,
         )
     finally:
         if session.interactive:
