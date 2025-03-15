@@ -119,12 +119,12 @@ jobs:
     needs: tests
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4
         with:
           clean: true
 
       - name: Set up Python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -150,8 +150,9 @@ jobs:
       - name: Download coverage data
         uses: actions/download-artifact@v4
         with:
-          name: coverage-data-*
+          # Use pattern since articaft name is dynamic
           pattern: coverage-data-*
+          path: .coverage.*
           merge-multiple: true
 
       - name: Combine coverage data and display human readable report
