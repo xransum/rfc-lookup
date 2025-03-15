@@ -155,6 +155,17 @@ jobs:
           path: .coverage.*
           merge-multiple: true
 
+      # With the new changes with upload-artifact, the .coverage.* files are now
+      # uploaded as a zip by their running os and Python version. Since the
+      # download-artifact action extracts them, they are now in a folder with the
+      # same name as the zip file. We need to move them to the root directory
+      # for Nox to be able to find them.
+      - name: Extract coverage data
+        run: |
+          ls -la ${{ github.workspace }}/.coverage.*
+          mv -v ${{ github.workspace }}/.coverage.*/.coverage.* ${{ github.workspace }}/
+          rm -vrf ${{ github.workspace }}/.coverage.*/
+
       - name: Combine coverage data and display human readable report
         run: |
           nox --session=coverage
