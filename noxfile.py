@@ -54,14 +54,14 @@ def precommit(session: nox.Session) -> None:
     ]
     _uv_install(
         session,
-        "black",
+        "black==24.8.0",
         "darglint",
         "flake8",
         "flake8-bandit",
         "flake8-bugbear",
         "flake8-docstrings",
         "flake8-rst-docstrings",
-        "isort",
+        "isort==5.13.2",
         "pep8-naming",
         "pre-commit",
         "pre-commit-hooks",

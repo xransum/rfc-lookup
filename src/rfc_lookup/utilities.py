@@ -126,8 +126,6 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
     rows = table.find_all("tr")[1:]
 
     for row in rows:
-        if not isinstance(row, Tag):  # pragma: no cover
-            continue
         cells = row.find_all("td")
 
         if len(cells) != 7:
@@ -136,7 +134,7 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
             continue
 
         report_anchor = cells[0].find("a")
-        if not isinstance(report_anchor, Tag):  # pragma: no cover
+        if not isinstance(report_anchor, Tag):
             continue
         report_url = report_anchor.get("href")
 

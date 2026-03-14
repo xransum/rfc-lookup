@@ -151,6 +151,25 @@ def test_search_rfc_editor_empty(mock_get_request: Mock) -> None:
     assert result == []
 
 
+def test_search_rfc_editor_no_anchor(mock_get_request: Mock) -> None:
+    """Test search_rfc_editor skips rows where first cell has no anchor."""
+    html = b"""<table class="gridtable">
+<tr></tr>
+<tr>
+<td>RFC 1</td>
+<td><a href="#">TXT</a></td>
+<td>Title Here</td>
+<td>John Doe</td>
+<td>January 1</td>
+<td>Lorem Ipsum</td>
+<td>Proposed Standard</td>
+</tr>
+</table>"""
+    mock_get_request.return_value = html
+    result = search_rfc_editor("Hello, World!")
+    assert result == []
+
+
 def test_search_rfc_editor_invalid_cols(
     mock_get_request: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
