@@ -33,42 +33,29 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4
         with:
           clean: true
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.18"
 
       - name: Upgrade pip
         run: |
           pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" pip
           pip --version
 
-      - name: Upgrade pip in virtual environments
-        shell: python
-        run: |
-          import os
-          import pip
-
-          with open(os.environ["GITHUB_ENV"], mode="a") as io:
-              print(f"VIRTUALENV_PIP={pip.__version__}", file=io)
-
-      - name: Install Poetry
-        run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" poetry
-          poetry --version
-
       - name: Install Nox
         run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
+          uv tool install --with "nox==2024.10.9" nox
           nox --version
-
-      - name: Install Nox-Poetry
-        run: |
-          pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox-poetry
 
       - name: Compute pre-commit cache key
         if: matrix.session == 'pre-commit'
@@ -76,6 +63,7 @@ jobs:
         shell: python
         run: |
           import hashlib
+          import os
           import sys
 
           python = "py{}.{}".format(*sys.version_info[:2])
@@ -83,7 +71,8 @@ jobs:
           digest = hashlib.sha256(payload).hexdigest()
           result = "${{ runner.os }}-{}-{}-pre-commit".format(python, digest[:8])
 
-          print("::set-output name=result::{}".format(result))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"result={result}\n")
 
       - name: Restore pre-commit cache
         uses: actions/cache@v4
@@ -128,38 +117,28 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.18"
+
       - name: Upgrade pip
         run: |
           pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" pip
           pip --version
 
-      - name: Install Poetry
-        run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" poetry
-          poetry --version
-
       - name: Install Nox
         run: |
-          pipx install --pip-args=--constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox
+          uv tool install --with "nox==2024.10.9" nox
           nox --version
-
-      - name: Install Nox-Poetry
-        run: |
-          pip install --constraint="${{ github.workspace }}/.github/workflows/constraints.txt" nox-poetry
 
       - name: Download coverage data
         uses: actions/download-artifact@v4
         with:
-          # Use pattern since articaft name is dynamic
           pattern: coverage-data-*
           path: .coverage.*
           merge-multiple: true
 
-      # With the new changes with upload-artifact, the .coverage.* files are now
-      # uploaded as a zip by their running os and Python version. Since the
-      # download-artifact action extracts them, they are now in a folder with the
-      # same name as the zip file. We need to move them to the root directory
-      # for Nox to be able to find them.
       - name: Extract coverage data
         run: |
           ls -la ${{ github.workspace }}/.coverage.*

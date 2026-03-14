@@ -1,16 +1,13 @@
 """Nox sessions."""
 
 import os
-import shlex
 import shutil
 import sys
 from pathlib import Path
-from textwrap import dedent
 from typing import List
 from uuid import uuid4
 
 import nox
-from nox_poetry import Session, session
 
 
 PACKAGE = "rfc_lookup"
@@ -34,91 +31,29 @@ nox.options.sessions = (
 )
 
 
-def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
-    """Activate virtualenv in hooks installed by pre-commit.
-
-    This function patches git hooks installed by pre-commit to activate the
-    session's virtual environment. This allows pre-commit to locate hooks in
-    that environment when invoked from git.
-
-    Args:
-        session: The Session object.
-    """
-    assert session.bin is not None  # noqa: S101
-
-    # Only patch hooks containing a reference to this session's bindir. Support
-    # quoting rules for Python and bash, but strip the outermost quotes so we
-    # can detect paths within the bindir, like <bindir>/python.
-    bindirs = [
-        bindir[1:-1] if bindir[0] in "'\"" else bindir
-        for bindir in (repr(session.bin), shlex.quote(session.bin))
-    ]
-
-    virtualenv = session.env.get("VIRTUAL_ENV")
-    if virtualenv is None:
-        return
-
-    headers = {
-        # pre-commit < 2.16.0
-        "python": f"""\
-            import os
-            os.environ["VIRTUAL_ENV"] = {virtualenv!r}
-            os.environ["PATH"] = os.pathsep.join((
-                {session.bin!r},
-                os.environ.get("PATH", ""),
-            ))
-            """,
-        # pre-commit >= 2.16.0
-        "bash": f"""\
-            VIRTUAL_ENV={shlex.quote(virtualenv)}
-            PATH={shlex.quote(session.bin)}"{os.pathsep}$PATH"
-            """,
-        # pre-commit >= 2.17.0 on Windows forces sh shebang
-        "/bin/sh": f"""\
-            VIRTUAL_ENV={shlex.quote(virtualenv)}
-            PATH={shlex.quote(session.bin)}"{os.pathsep}$PATH"
-            """,
-    }
-
-    hookdir = Path(".git") / "hooks"
-    if not hookdir.is_dir():
-        return
-
-    for hook in hookdir.iterdir():
-        if hook.name.endswith(".sample") or not hook.is_file():
-            continue
-
-        if not hook.read_bytes().startswith(b"#!"):
-            continue
-
-        text = hook.read_text()
-
-        if not any(
-            Path("A") == Path("a")
-            and bindir.lower() in text.lower()
-            or bindir in text
-            for bindir in bindirs
-        ):
-            continue
-
-        lines = text.splitlines()
-
-        for executable, header in headers.items():
-            if executable in lines[0].lower():
-                lines.insert(1, dedent(header))
-                hook.write_text("\n".join(lines))
-                break
+def _uv_install(session: nox.Session, *args: str) -> None:
+    """Install packages into the session using uv."""
+    session.run(
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        session.virtualenv.location,
+        *args,
+        external=True,
+    )
 
 
-@session(name="pre-commit", python=PYTHON_VERSION_MAIN)
-def precommit(session: Session) -> None:
+@nox.session(name="pre-commit", python=PYTHON_VERSION_MAIN)
+def precommit(session: nox.Session) -> None:
     """Lint using pre-commit."""
     args: List[str] = session.posargs or [
         "run",
         "--all-files",
         "--hook-stage=manual",
     ]
-    session.install(
+    _uv_install(
+        session,
         "black",
         "darglint",
         "flake8",
@@ -132,33 +67,18 @@ def precommit(session: Session) -> None:
         "pre-commit-hooks",
         "pyupgrade",
     )
-
-    try:
-        session.run("poetry", "--version")
-    except Exception:
-        print("Installing poetry!")
-        session.install("poetry")
-
     session.run("pre-commit", *args)
-    if args and args[0] == "install":
-        activate_virtualenv_in_precommit_hooks(session)
 
 
-@session(python=PYTHON_VERSION_MAIN)
-def safety(session: Session) -> None:
+@nox.session(python=PYTHON_VERSION_MAIN)
+def safety(session: nox.Session) -> None:
     """Scan dependencies for insecure packages."""
-    requirements = session.poetry.export_requirements()
+    _uv_install(session, "safety", ".")
+    args = ["safety", "check", "--full-report"]
 
-    session.install("safety")
-
-    args = ["safety", "check", "--full-report", f"--file={requirements}"]
-
-    if os.path.exists(".safety") is True:
+    if os.path.exists(".safety"):
         with open(".safety", encoding="utf-8") as f:
-            lines = [
-                line.strip() for line in f.readlines() if line.strip() != ""
-            ]
-
+            lines = [line.strip() for line in f.readlines() if line.strip() != ""]
             if len(lines) > 0:
                 vulns = ",".join(lines)
                 args.append(f"--ignore={vulns}")
@@ -166,48 +86,27 @@ def safety(session: Session) -> None:
     session.run(*args)
 
 
-@session(python=PYTHON_VERSION_MAIN)
-def mypy(session: Session) -> None:
+@nox.session(python=PYTHON_VERSION_MAIN)
+def mypy(session: nox.Session) -> None:
     """Type-check using mypy."""
     args: List[str] = session.posargs or list(
         filter(lambda a: a != "noxfile.py", LOCATIONS)
     )
-
-    session.install(".", "mypy", "pytest", "importlib-metadata")
+    _uv_install(session, ".", "mypy", "pytest")
     session.run("mypy", *args)
 
     if not session.posargs and session.python == PYTHON_VERSION_MAIN:
-        session.run(
-            "mypy", f"--python-executable={sys.executable}", "noxfile.py"
-        )
+        session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
 
 
-@session(python=PYTHON_VERSIONS)
-def pytype(session: Session) -> None:
-    """Run the static type checker."""
-    args: List[str] = session.posargs or ["--disable=import-error", *LOCATIONS]
-    session.install("pytype")
-    session.run("pytype", *args)
-
-
-# @session
-# @nox.parametrize(
-#     "python,poetry",
-#     [
-#         (PYTHON_VERSIONS[0], "1.0.10"),
-#         *((python, None) for python in PYTHON_VERSIONS),
-#     ],
-# )
-# def tests(session: Session, poetry: str) -> None:
-@session(python=PYTHON_VERSIONS)
-def tests(session: Session) -> None:
+@nox.session(python=PYTHON_VERSIONS)
+def tests(session: nox.Session) -> None:
     """Run the test suite."""
-    session.install(".")
-    session.install(
+    _uv_install(
+        session,
+        ".",
         "coverage[toml]",
-        "poetry",
         "pytest",
-        "pytest-datadir",
         "pygments",
         "typing_extensions",
     )
@@ -229,12 +128,12 @@ def tests(session: Session) -> None:
             session.notify("coverage", posargs=[])
 
 
-@session(python=PYTHON_VERSION_MAIN)
-def coverage(session: Session) -> None:
+@nox.session(python=PYTHON_VERSION_MAIN)
+def coverage(session: nox.Session) -> None:
     """Produce the coverage report."""
     args: List[str] = session.posargs or ["report"]
 
-    session.install("coverage[toml]")
+    _uv_install(session, "coverage[toml]")
 
     if not session.posargs and any(Path().glob(".coverage.*")):
         session.run("coverage", "combine")
@@ -242,16 +141,15 @@ def coverage(session: Session) -> None:
     session.run("coverage", *args)
 
 
-@session(python=PYTHON_VERSIONS)
-def typeguard(session: Session) -> None:
+@nox.session(python=PYTHON_VERSIONS)
+def typeguard(session: nox.Session) -> None:
     """Runtime type checking using Typeguard."""
-    session.install(".")
-    session.install("pytest", "typeguard", "pygments")
+    _uv_install(session, ".", "pytest", "typeguard", "pygments")
     session.run("pytest", f"--typeguard-packages={PACKAGE}", *session.posargs)
 
 
-@session(python=PYTHON_VERSIONS)
-def xdoctest(session: Session) -> None:
+@nox.session(python=PYTHON_VERSIONS)
+def xdoctest(session: nox.Session) -> None:
     """Run examples with xdoctest."""
     if session.posargs:
         args: List[str] = [PACKAGE, *session.posargs]
@@ -260,20 +158,18 @@ def xdoctest(session: Session) -> None:
         if "FORCE_COLOR" in os.environ:
             args.append("--colored=1")
 
-    session.install(".")
-    session.install("xdoctest[colors]")
+    _uv_install(session, ".", "xdoctest[colors]")
     session.run("python", "-m", "xdoctest", *args)
 
 
-@session(name="docs-build", python=PYTHON_VERSION_MAIN)
-def docs_build(session: Session) -> None:
+@nox.session(name="docs-build", python=PYTHON_VERSION_MAIN)
+def docs_build(session: nox.Session) -> None:
     """Build the documentation."""
     args: List[str] = session.posargs or ["docs", "docs/_build"]
     if not session.posargs and "FORCE_COLOR" in os.environ:
         args.insert(0, "--color")
 
-    session.install(".")
-    session.install("sphinx", "furo", "myst-parser")
+    _uv_install(session, ".", "sphinx", "furo", "myst-parser")
 
     build_dir = Path("docs", "_build")
     if build_dir.exists():
@@ -282,16 +178,15 @@ def docs_build(session: Session) -> None:
     session.run("sphinx-build", *args)
 
 
-@session(python=PYTHON_VERSION_MAIN)
-def docs(session: Session) -> None:
+@nox.session(python=PYTHON_VERSION_MAIN)
+def docs(session: nox.Session) -> None:
     """Build and serve the documentation with live reloading on file changes."""
     args: List[str] = session.posargs or [
         "--open-browser",
         "docs",
         "docs/_build",
     ]
-    session.install(".")
-    session.install("sphinx", "sphinx-autobuild", "furo", "myst-parser")
+    _uv_install(session, ".", "sphinx", "sphinx-autobuild", "furo", "myst-parser")
 
     build_dir = Path("docs", "_build")
     if build_dir.exists():
