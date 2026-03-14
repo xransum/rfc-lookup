@@ -7,8 +7,8 @@ body:
     attributes:
       value: |
         **Thanks :heart: for taking the time to fill out this feature request report!**
-        We kindly ask that you search to see if an issue [already exists](https://github.com/xransum/valkyrie-tools/issues?q=is%3Aissue+sort%3Acreated-desc+) for your feature.
-        We are also happy to accept contributions from our users. For more details see [here](https://github.com/xransum/valkyrie-tools/blob/master/CONTRIBUTING.md).
+        We kindly ask that you search to see if an issue [already exists](https://github.com/xransum/rfc-lookup/issues?q=is%3Aissue+sort%3Acreated-desc+) for your feature.
+        We are also happy to accept contributions from our users. For more details see [here](https://github.com/xransum/rfc-lookup/blob/master/CONTRIBUTING.md).
   - type: textarea
     attributes:
       label: Description

@@ -1,23 +1,35 @@
 """Module for package utility functions."""
 
+import logging
 import re
+import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS
-from rfc_lookup.errors import InvalidRfcIdError
+from rfc_lookup.errors import InvalidRfcIdError, NetworkError
+
+
+logger = logging.getLogger(__name__)
 
 
 def clean_chars(text: str) -> str:
-    """Clean up special characters."""
+    """Clean up special characters in a string.
+
+    Args:
+        text (str): The input string to clean.
+
+    Returns:
+        str: The cleaned string with non-breaking spaces replaced.
+    """
     return text.replace("\xa0", " ")
 
 
 def extract_authors(line: str) -> List[str]:
-    """Splits a line of author data into individual authors.
+    """Split a line of author data into individual authors.
 
     Keeps 'Ed.' attached to the corresponding name.
 
@@ -44,8 +56,20 @@ def extract_authors(line: str) -> List[str]:
 def get_request(
     url: str,
     params: Optional[Dict[str, str]] = None,
-) -> Any:
-    """Get the content of a web page."""
+) -> bytes:
+    """Get the content of a web page.
+
+    Args:
+        url (str): The URL to request.
+        params (dict, optional): Query parameters to append to the URL.
+
+    Returns:
+        bytes: The raw response body.
+
+    Raises:
+        ValueError: If the URL is empty or uses a disallowed scheme.
+        NetworkError: If the request fails due to a network or HTTP error.
+    """
     if not url:
         raise ValueError("URL cannot be empty.")
 
@@ -62,16 +86,26 @@ def get_request(
             f"Allowed schemes are: {', '.join(ALLOWED_SCHEMES)}"
         )
 
-    # Create the request
+    # Create and execute the request
     headers = DEFAULT_HEADERS
     req = urllib.request.Request(full_url, headers=headers)
-    # with urllib.request.urlopen(req) as res:
-    #     return res.read()
-    return urllib.request.urlopen(req).read()
+    try:
+        return cast(bytes, urllib.request.urlopen(req).read())
+    except (urllib.error.URLError, urllib.error.HTTPError) as exc:
+        raise NetworkError(f"Request to {full_url!r} failed: {exc}") from exc
 
 
 def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
-    """Search the RFC editor for RFCs by title."""
+    """Search the RFC editor for RFCs by title.
+
+    Args:
+        value (str): The title or keyword to search for.
+
+    Returns:
+        list: A list of dicts, each representing a matching RFC with keys:
+            id, link, files, title, authors, publication_date, more_info,
+            status.
+    """
     url = "https://www.rfc-editor.org/search/rfc_search_detail.php"
     params = {
         "title": value,
@@ -86,20 +120,22 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
     table = soup.find("table", class_="gridtable")
     results: List[Dict[str, Any]] = []
 
-    if table is None:
+    if not isinstance(table, Tag):
         return results
 
-    rows = table.find_all("tr")[1:]  # type: ignore
+    rows = table.find_all("tr")[1:]
 
     for row in rows:
         cells = row.find_all("td")
 
         if len(cells) != 7:
             # There's a chance that the table column breaks for the report column
-            print(f"Skipping row with {len(cells)} columns")
+            logger.debug("Skipping row with %d columns", len(cells))
             continue
 
         report_anchor = cells[0].find("a")
+        if not isinstance(report_anchor, Tag):
+            continue
         report_url = report_anchor.get("href")
 
         _id = int(clean_chars(report_anchor.text.strip()).split(" ")[1])
@@ -110,6 +146,7 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
                 "files": {
                     clean_chars(a.text.strip()): a.get("href")
                     for a in cells[1].find_all("a")
+                    if isinstance(a, Tag)
                 },
                 "title": clean_chars(cells[2].text.strip()),
                 "authors": extract_authors(clean_chars(cells[3].text.strip())),
@@ -123,7 +160,11 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
 
 
 def get_latest_report_ids() -> List[int]:
-    """Get and parse the IETF latest reports."""
+    """Get and parse the IETF latest reports.
+
+    Returns:
+        list: A sorted list of known RFC IDs as integers.
+    """
     url = "https://www.ietf.org/rfc/rfc-index-latest.txt"
     content = get_request(url).decode("utf-8")
 
@@ -143,7 +184,17 @@ def get_latest_report_ids() -> List[int]:
 
 
 def get_rfc_report(report_id: int) -> str:
-    """Get the RFC report for a given RFC ID."""
+    """Get the RFC report for a given RFC ID.
+
+    Args:
+        report_id (int): The RFC number to retrieve.
+
+    Returns:
+        str: The plain-text content of the RFC document.
+
+    Raises:
+        InvalidRfcIdError: If report_id is out of the valid range.
+    """
     latest_ids = get_latest_report_ids()
     latest_id = latest_ids[-1]
 

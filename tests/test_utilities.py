@@ -1,14 +1,15 @@
 """Tests for utilities module."""
 
+import logging
 import urllib.parse
 from typing import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from rfc_lookup.constants import DEFAULT_HEADERS
-from rfc_lookup.errors import InvalidRfcIdError
+from rfc_lookup.errors import InvalidRfcIdError, NetworkError
 from rfc_lookup.utilities import (
     clean_chars,
     extract_authors,
@@ -56,15 +57,10 @@ def test_get_request(mock_request: Mock, mock_urlopen: Mock) -> None:
     """Test get_request."""
     mock_url = "http://127.0.0.1:80/"
     mock_result = b"Hello, World!"
-    # Mock urllib.request.urlopen.read
     mock_read = Mock()
     mock_read.read.side_effect = [mock_result]
-    # Mock context manager for urlopen
-    # mock_urlopen.return_value.__enter__.return_value = mock_read
     mock_urlopen.return_value = mock_read
-    # Make request
     result = get_request(mock_url)
-    # Assert results
     mock_request.assert_called_once_with(mock_url, headers=DEFAULT_HEADERS)
     assert result == mock_result
 
@@ -72,34 +68,40 @@ def test_get_request(mock_request: Mock, mock_urlopen: Mock) -> None:
 def test_get_request_with_params(
     mock_request: Mock, mock_urlopen: Mock
 ) -> None:
-    """Test get_request."""
+    """Test get_request with query parameters."""
     mock_url = "http://127.0.0.1:80/"
     mock_params = {"a": "1", "b": "2"}
     mock_full_url = f"{mock_url}?{urllib.parse.urlencode(mock_params)}"
     mock_result = b"Hello, World!"
-    # Mock urllib.request.urlopen.read
     mock_read = Mock()
     mock_read.read.side_effect = [mock_result]
-    # Mock context manager for urlopen
-    # mock_urlopen.return_value.__enter__.return_value = mock_read
     mock_urlopen.return_value = mock_read
-    # Make request
     result = get_request(mock_url, params=mock_params)
-    # Assert results
     mock_request.assert_called_once_with(mock_full_url, headers=DEFAULT_HEADERS)
     assert result == mock_result
 
 
 def test_get_request_invalid_url() -> None:
-    """Test get_request invalid URL."""
+    """Test get_request with an empty URL."""
     with pytest.raises(ValueError):
         get_request("")
 
 
 def test_get_request_invalid_scheme() -> None:
-    """Test get_request invalid scheme."""
+    """Test get_request with a disallowed URL scheme."""
     with pytest.raises(ValueError):
         get_request("ssh:127.0.0.1")
+
+
+def test_get_request_network_error(
+    mock_request: Mock, mock_urlopen: Mock
+) -> None:
+    """Test get_request raises NetworkError on URLError."""
+    import urllib.error
+
+    mock_urlopen.side_effect = urllib.error.URLError("connection refused")
+    with pytest.raises(NetworkError):
+        get_request("http://127.0.0.1:80/")
 
 
 @pytest.fixture
@@ -149,17 +151,42 @@ def test_search_rfc_editor_empty(mock_get_request: Mock) -> None:
     assert result == []
 
 
-def test_search_rfc_editor_invalid_cols(mock_get_request: Mock) -> None:
-    """Test requests for rfc editor with invalid cols."""
+def test_search_rfc_editor_no_anchor(mock_get_request: Mock) -> None:
+    """Test search_rfc_editor skips rows where first cell has no anchor."""
+    html = b"""<table class="gridtable">
+<tr></tr>
+<tr>
+<td>RFC 1</td>
+<td><a href="#">TXT</a></td>
+<td>Title Here</td>
+<td>John Doe</td>
+<td>January 1</td>
+<td>Lorem Ipsum</td>
+<td>Proposed Standard</td>
+</tr>
+</table>"""
+    mock_get_request.return_value = html
+    result = search_rfc_editor("Hello, World!")
+    assert result == []
+
+
+def test_search_rfc_editor_invalid_cols(
+    mock_get_request: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test requests for rfc editor with invalid cols logs a debug message."""
     # Mock result by nuking one of the td elements
     soup = BeautifulSoup(mock_valid_rfc_search, "html.parser")
     tr = soup.find_all("tr")[-1]
-    td = tr.find("td")  # type: ignore
-    td.replace_with("")  # type: ignore
+    assert isinstance(tr, Tag)
+    td = tr.find("td")
+    assert isinstance(td, Tag)
+    td.replace_with("")
 
     mock_get_request.return_value = str(soup).encode("utf-8")
-    result = search_rfc_editor("Hello, World!")
+    with caplog.at_level(logging.DEBUG, logger="rfc_lookup.utilities"):
+        result = search_rfc_editor("Hello, World!")
     assert result == []
+    assert "Skipping row with" in caplog.text
 
 
 mock_latest_reports = b"""
