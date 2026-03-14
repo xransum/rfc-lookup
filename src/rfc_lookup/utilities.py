@@ -5,7 +5,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from bs4 import BeautifulSoup
 
@@ -56,7 +56,7 @@ def extract_authors(line: str) -> List[str]:
 def get_request(
     url: str,
     params: Optional[Dict[str, str]] = None,
-) -> Any:
+) -> bytes:
     """Get the content of a web page.
 
     Args:
@@ -90,7 +90,7 @@ def get_request(
     headers = DEFAULT_HEADERS
     req = urllib.request.Request(full_url, headers=headers)
     try:
-        return urllib.request.urlopen(req).read()
+        return cast(bytes, urllib.request.urlopen(req).read())
     except (urllib.error.URLError, urllib.error.HTTPError) as exc:
         raise NetworkError(f"Request to {full_url!r} failed: {exc}") from exc
 
@@ -191,7 +191,6 @@ def get_rfc_report(report_id: int) -> str:
 
     Raises:
         InvalidRfcIdError: If report_id is out of the valid range.
-        NetworkError: If the request fails due to a network or HTTP error.
     """
     latest_ids = get_latest_report_ids()
     latest_id = latest_ids[-1]

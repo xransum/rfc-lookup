@@ -1,6 +1,7 @@
 """Command-line interface."""
 
 import webbrowser
+from typing import Optional
 
 import click
 
@@ -37,25 +38,25 @@ def cli(ctx: click.Context, version: bool) -> None:
     default=None,
     help="Write RFC content to a file instead of stdout.",
 )
-def rfc_get(id: int, url: bool, output: str) -> None:
+def rfc_get(id: int, url: bool, output: Optional[str]) -> None:
     """Show details for given RFC numbers."""
     try:
         report = get_rfc_report(id)
-        if url:
-            click.echo(f"https://www.rfc-editor.org/rfc/rfc{id}.html")
-        elif output:
-            with open(output, "w", encoding="utf-8") as f:
-                f.write(report)
-            click.echo(f"RFC {id} saved to {output}")
-        else:
-            click.echo(report)
-
     except InvalidRfcIdError as err:
         click.echo(err, err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
     except NetworkError as err:
         click.echo(f"Network error: {err}", err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
+
+    if url:
+        click.echo(f"https://www.rfc-editor.org/rfc/rfc{id}.html")
+    elif output:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(report)
+        click.echo(f"RFC {id} saved to {output}")
+    else:
+        click.echo(report)
 
 
 @click.command(name="search")  # pragma: no cover
@@ -72,7 +73,7 @@ def rfc_search(value: str, verbose: bool) -> None:
         results = search_rfc_editor(value)
     except NetworkError as err:
         click.echo(f"Network error: {err}", err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
     click.echo(f"Search {value!r} with {len(results)} results.")
     for result in results:
@@ -101,7 +102,7 @@ def rfc_open(id: int, text: bool) -> None:
         latest_ids = get_latest_report_ids()
     except NetworkError as err:
         click.echo(f"Network error: {err}", err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from None
 
     latest_id = latest_ids[-1]
     if 0 >= id or id > latest_id:
@@ -116,7 +117,7 @@ def rfc_open(id: int, text: bool) -> None:
             content = get_rfc_report(id)
         except NetworkError as err:
             click.echo(f"Network error: {err}", err=True)
-            raise SystemExit(1)
+            raise SystemExit(1) from None
         click.echo_via_pager(content)
     else:
         url = f"https://www.rfc-editor.org/rfc/rfc{id}.html"

@@ -7,7 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 from rfc_lookup.command import cli
-from rfc_lookup.errors import InvalidRfcIdError, NetworkError
+from rfc_lookup.errors import NetworkError
 
 
 @pytest.fixture
