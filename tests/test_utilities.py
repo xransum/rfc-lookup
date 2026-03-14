@@ -6,7 +6,7 @@ from typing import Generator
 from unittest.mock import Mock, patch
 
 import pytest
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from rfc_lookup.constants import DEFAULT_HEADERS
 from rfc_lookup.errors import InvalidRfcIdError, NetworkError
@@ -65,7 +65,9 @@ def test_get_request(mock_request: Mock, mock_urlopen: Mock) -> None:
     assert result == mock_result
 
 
-def test_get_request_with_params(mock_request: Mock, mock_urlopen: Mock) -> None:
+def test_get_request_with_params(
+    mock_request: Mock, mock_urlopen: Mock
+) -> None:
     """Test get_request with query parameters."""
     mock_url = "http://127.0.0.1:80/"
     mock_params = {"a": "1", "b": "2"}
@@ -91,7 +93,9 @@ def test_get_request_invalid_scheme() -> None:
         get_request("ssh:127.0.0.1")
 
 
-def test_get_request_network_error(mock_request: Mock, mock_urlopen: Mock) -> None:
+def test_get_request_network_error(
+    mock_request: Mock, mock_urlopen: Mock
+) -> None:
     """Test get_request raises NetworkError on URLError."""
     import urllib.error
 
@@ -154,7 +158,9 @@ def test_search_rfc_editor_invalid_cols(
     # Mock result by nuking one of the td elements
     soup = BeautifulSoup(mock_valid_rfc_search, "html.parser")
     tr = soup.find_all("tr")[-1]
+    assert isinstance(tr, Tag)
     td = tr.find("td")
+    assert isinstance(td, Tag)
     td.replace_with("")
 
     mock_get_request.return_value = str(soup).encode("utf-8")

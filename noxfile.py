@@ -78,7 +78,9 @@ def safety(session: nox.Session) -> None:
 
     if os.path.exists(".safety"):
         with open(".safety", encoding="utf-8") as f:
-            lines = [line.strip() for line in f.readlines() if line.strip() != ""]
+            lines = [
+                line.strip() for line in f.readlines() if line.strip() != ""
+            ]
             if len(lines) > 0:
                 vulns = ",".join(lines)
                 args.append(f"--ignore={vulns}")
@@ -96,7 +98,9 @@ def mypy(session: nox.Session) -> None:
     session.run("mypy", *args)
 
     if not session.posargs and session.python == PYTHON_VERSION_MAIN:
-        session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
+        session.run(
+            "mypy", f"--python-executable={sys.executable}", "noxfile.py"
+        )
 
 
 @nox.session(python=PYTHON_VERSIONS)
@@ -186,7 +190,9 @@ def docs(session: nox.Session) -> None:
         "docs",
         "docs/_build",
     ]
-    _uv_install(session, ".", "sphinx", "sphinx-autobuild", "furo", "myst-parser")
+    _uv_install(
+        session, ".", "sphinx", "sphinx-autobuild", "furo", "myst-parser"
+    )
 
     build_dir = Path("docs", "_build")
     if build_dir.exists():

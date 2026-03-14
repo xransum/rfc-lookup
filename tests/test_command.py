@@ -46,7 +46,9 @@ def test_cli_no_cmd(cli_runner: CliRunner) -> None:
 
 
 @patch("rfc_lookup.command.get_rfc_report")
-def test_cli_rfc_get_report(mock_get_rfc_report: Mock, cli_runner: CliRunner) -> None:
+def test_cli_rfc_get_report(
+    mock_get_rfc_report: Mock, cli_runner: CliRunner
+) -> None:
     """Test the CLI get report command."""
     mock_get_rfc_report.return_value = "RFC Report"
     result = cli_runner.invoke(cli, ["get", "1234"])
@@ -73,7 +75,9 @@ def test_cli_rfc_get_report_output_file(
     import tempfile
 
     mock_get_rfc_report.return_value = "RFC Content"
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False
+    ) as tmp:
         tmp_name = tmp.name
 
     try:
@@ -129,7 +133,9 @@ def test_cli_rfc_get_network_error(
 
 
 @patch("rfc_lookup.command.search_rfc_editor")
-def test_cli_rfc_search(mock_search_rfc_editor: Mock, cli_runner: CliRunner) -> None:
+def test_cli_rfc_search(
+    mock_search_rfc_editor: Mock, cli_runner: CliRunner
+) -> None:
     """Test the CLI search command."""
     mock_search_value = "1234"
     mock_search_results = [

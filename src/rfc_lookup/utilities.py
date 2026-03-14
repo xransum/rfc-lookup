@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, cast
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from rfc_lookup.constants import ALLOWED_SCHEMES, DEFAULT_HEADERS
 from rfc_lookup.errors import InvalidRfcIdError, NetworkError
@@ -120,12 +120,14 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
     table = soup.find("table", class_="gridtable")
     results: List[Dict[str, Any]] = []
 
-    if table is None:
+    if not isinstance(table, Tag):
         return results
 
-    rows = table.find_all("tr")[1:]  # type: ignore
+    rows = table.find_all("tr")[1:]
 
     for row in rows:
+        if not isinstance(row, Tag):  # pragma: no cover
+            continue
         cells = row.find_all("td")
 
         if len(cells) != 7:
@@ -134,6 +136,8 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
             continue
 
         report_anchor = cells[0].find("a")
+        if not isinstance(report_anchor, Tag):  # pragma: no cover
+            continue
         report_url = report_anchor.get("href")
 
         _id = int(clean_chars(report_anchor.text.strip()).split(" ")[1])
@@ -144,6 +148,7 @@ def search_rfc_editor(value: str) -> List[Dict[str, Any]]:
                 "files": {
                     clean_chars(a.text.strip()): a.get("href")
                     for a in cells[1].find_all("a")
+                    if isinstance(a, Tag)
                 },
                 "title": clean_chars(cells[2].text.strip()),
                 "authors": extract_authors(clean_chars(cells[3].text.strip())),
